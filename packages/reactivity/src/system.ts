@@ -6,9 +6,9 @@ export interface Link {
     nextSub: Link | undefined
     prevSub: Link | undefined
 }
-export function track(dep) {
+export function link(dep, sub) {
     const newLink = {
-        sub: activeSub,
+        sub,
         nextSub: undefined,
         prevSub: undefined
     }
@@ -23,8 +23,21 @@ export function track(dep) {
         dep.subsTail = newLink
     }
 }
+// 收集依赖  
+export function trackRef(dep) {
+    if (activeSub) {
+        link(dep, activeSub)
+    }
+}
+// 触发ref关联的effect重新执行
 export function triggerRef(dep) {
-    let link = dep.subs
+    // 链表头节点
+    if (dep.subs) {
+        propagete(dep.subs)
+    }
+}
+function propagete(subs) {
+    let link = subs
     const queueEffect = []
     while (link) {
         queueEffect.push(link.sub)

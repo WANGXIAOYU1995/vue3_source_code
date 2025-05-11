@@ -1,5 +1,4 @@
-import { activeSub } from "./effect";
-import { Link, track, triggerRef } from "./system";
+import { Link, trackRef, triggerRef } from "./system";
 
 enum ReactiveFlags {
     IS_REF = '__v_isRef'
@@ -18,9 +17,7 @@ class RefImpl {
     }
     get value() {
         // 收集依赖
-        if (activeSub) {
-            track(this)
-        }
+        trackRef(this)
         return this._value
     }
     set value(newValue) {

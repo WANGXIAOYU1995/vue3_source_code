@@ -15,6 +15,7 @@ class ReactiveEffect {
             activeSub = prevSub
         }
     }
+    // 依赖的数据发生了变化 会调用notify
     notify() {
         this.scheduler()
     }

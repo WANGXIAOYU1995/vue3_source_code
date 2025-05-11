@@ -13,6 +13,7 @@ var ReactiveEffect = class {
       activeSub = prevSub;
     }
   }
+  // 依赖的数据发生了变化 会调用notify
   notify() {
     this.scheduler();
   }
@@ -31,9 +32,9 @@ function effect(fn, options) {
 }
 
 // packages/reactivity/src/system.ts
-function track(dep) {
+function link(dep, sub) {
   const newLink = {
-    sub: activeSub,
+    sub,
     nextSub: void 0,
     prevSub: void 0
   };
@@ -46,12 +47,22 @@ function track(dep) {
     dep.subsTail = newLink;
   }
 }
+function trackRef(dep) {
+  if (activeSub) {
+    link(dep, activeSub);
+  }
+}
 function triggerRef(dep) {
-  let link = dep.subs;
+  if (dep.subs) {
+    propagete(dep.subs);
+  }
+}
+function propagete(subs) {
+  let link2 = subs;
   const queueEffect = [];
-  while (link) {
-    queueEffect.push(link.sub);
-    link = link.nextSub;
+  while (link2) {
+    queueEffect.push(link2.sub);
+    link2 = link2.nextSub;
   }
   queueEffect.forEach((effect2) => effect2.notify());
 }
@@ -69,9 +80,7 @@ var RefImpl = class {
     this._value = value;
   }
   get value() {
-    if (activeSub) {
-      track(this);
-    }
+    trackRef(this);
     return this._value;
   }
   set value(newValue) {
