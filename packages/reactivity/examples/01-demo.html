@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script type="module">
+        import { effect, ref } from '../dist/reactivity.esm.js'
+        // import { ref, effect } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+        const count = ref(0)
+        const runner = effect(() => {
+            console.log('effect :>> ', count.value);
+            return 1
+        }, {
+            scheduler() {
+                // 在这能手动调用并拿到上面fn函数的返回值
+                const newValue = runner()
+                console.log('触发调度器', newValue);
+            }
+        })
+
+        setTimeout(() => {
+            count.value += 1
+        }, 1000);
+    </script>
+</body>
+
+</html>

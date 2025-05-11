@@ -1,0 +1,22 @@
+{
+  "name": "vue3_yuanfang_study",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js reactivity --format esm"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "esbuild": "^0.25.4",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  }
+}
