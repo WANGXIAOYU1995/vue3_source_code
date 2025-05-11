@@ -4,9 +4,14 @@ var ReactiveEffect = class {
   constructor(fn) {
     this.fn = fn;
   }
+  // 依赖项列表的头节点
+  deps;
+  // 依赖项列表的尾节点
+  depsTail;
   run() {
     const prevSub = activeSub;
     activeSub = this;
+    this.depsTail = void 0;
     try {
       return this.fn();
     } finally {
@@ -33,8 +38,17 @@ function effect(fn, options) {
 
 // packages/reactivity/src/system.ts
 function link(dep, sub) {
+  const currentDep = sub.depsTail;
+  const nextDep = currentDep === void 0 ? sub.deps : currentDep.nextDep;
+  if (nextDep && nextDep.dep === dep) {
+    console.log("\u76F8\u540C\u7684\u4F9D\u8D56\u76F4\u63A5\u590D\u7528");
+    sub.depsTail = nextDep;
+    return;
+  }
   const newLink = {
     sub,
+    dep,
+    nextDep: void 0,
     nextSub: void 0,
     prevSub: void 0
   };
@@ -45,6 +59,13 @@ function link(dep, sub) {
   } else {
     dep.subs = newLink;
     dep.subsTail = newLink;
+  }
+  if (sub.depsTail) {
+    sub.depsTail.nextDep = newLink;
+    sub.depsTail = newLink;
+  } else {
+    sub.deps = newLink;
+    sub.depsTail = newLink;
   }
 }
 function trackRef(dep) {

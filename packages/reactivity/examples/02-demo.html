@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            padding: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <button id="btn" style="padding: 20px;">按钮</button>
+    <script type="module">
+        import { effect, ref } from '../dist/reactivity.esm.js'
+        // import { ref, effect } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
+        const flag = ref(true)
+        const count = ref(0)
+        const e = effect(() => {
+            flag.value
+            count.value
+            console.count('effect')
+        }
+        )
+        btn.onclick = () => {
+            count.value++
+        }
+
+    </script>
+</body>
+
+</html>
