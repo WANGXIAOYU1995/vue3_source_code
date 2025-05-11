@@ -1,3 +1,5 @@
+学习进度：第三章 第4小节 响应式数据的伴侣 effect
+
 # monorepo
 
 使用pnpm，创建pnpm-workspace.yaml文件，配置monorepo  
