@@ -1,13 +1,19 @@
+import { Link } from "./system"
+
 export let activeSub
 
 class ReactiveEffect {
     constructor(public fn) {
 
     }
+    // 依赖项的头节点尾节点
+    deps: Link | undefined
+    depsTail: Link | undefined
     run() {
         // 先将之前的effect保存起来  没有嵌套时候就是undefined,因为js是单线程的 所以只有一个activeSub  上下两个effect也不影响
         const prevSub = activeSub
         activeSub = this
+        this.depsTail = undefined
         try {
             return this.fn()
         } finally {

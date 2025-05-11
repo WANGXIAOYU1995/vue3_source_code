@@ -4,9 +4,13 @@ var ReactiveEffect = class {
   constructor(fn) {
     this.fn = fn;
   }
+  // 依赖项的头节点尾节点
+  deps;
+  depsTail;
   run() {
     const prevSub = activeSub;
     activeSub = this;
+    this.depsTail = void 0;
     try {
       return this.fn();
     } finally {
@@ -33,8 +37,15 @@ function effect(fn, options) {
 
 // packages/reactivity/src/system.ts
 function link(dep, sub) {
+  const currentDep = sub.depsTail === void 0 ? sub.deps : sub.depsTail.nextDep;
+  if (currentDep && currentDep.dep === dep) {
+    console.log("\u590D\u7528\u4E86\u8282\u70B9");
+    return;
+  }
   const newLink = {
     sub,
+    dep,
+    nextDep: void 0,
     nextSub: void 0,
     prevSub: void 0
   };
@@ -45,6 +56,13 @@ function link(dep, sub) {
   } else {
     dep.subs = newLink;
     dep.subsTail = newLink;
+  }
+  if (sub.depsTail) {
+    sub.depsTail.nextDep = newLink;
+    sub.depsTail = newLink;
+  } else {
+    sub.deps = newLink;
+    sub.depsTail = newLink;
   }
 }
 function trackRef(dep) {
