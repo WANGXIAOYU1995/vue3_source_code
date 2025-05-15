@@ -50,7 +50,7 @@ function link(dep, sub) {
     dep,
     nextDep: void 0,
     nextSub: void 0,
-    prevSub: void 0
+    prevSub: void 0,
   };
   if (dep.subsTail) {
     dep.subsTail.nextSub = newLink;
@@ -115,10 +115,5 @@ function ref(value) {
 function isRef(value) {
   return !!(value && value["__v_isRef" /* IS_REF */]);
 }
-export {
-  activeSub,
-  effect,
-  isRef,
-  ref
-};
+export { activeSub, effect, isRef, ref };
 //# sourceMappingURL=reactivity.esm.js.map

@@ -16,7 +16,6 @@ class ReactiveEffect {
         const prevSub = activeSub
         activeSub = this
         this.depsTail = undefined
-
         try {
             return this.fn()
         } finally {
