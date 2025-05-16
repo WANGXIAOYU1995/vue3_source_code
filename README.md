@@ -30,3 +30,7 @@ monorepo 中 安装其他的包 pnpm install @vue/shared --workspace --filter @v
          */
     </script>
 ```
+
+# 4.依赖清理
+
+在effect中如果有分支依赖，也就是if时，不处理时 第一波effect执行会进行依赖收集，后续变化effect依然会执行（即使没进if）此时就需要清理依赖

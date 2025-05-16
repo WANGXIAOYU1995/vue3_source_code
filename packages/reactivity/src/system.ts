@@ -28,14 +28,13 @@ export function link(dep, sub) {
     // 可以复用的节点
     const nextDep = currentDep === undefined ? sub.deps : currentDep.nextDep
     if (nextDep && nextDep.dep === dep) {
-        console.log('相同的依赖直接复用');
         sub.depsTail = nextDep
         return
     }
     const newLink = {
         sub,
         dep,
-        nextDep: undefined,
+        nextDep,
         nextSub: undefined,
         prevSub: undefined
     }

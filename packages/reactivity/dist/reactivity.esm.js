@@ -15,6 +15,7 @@ var ReactiveEffect = class {
     try {
       return this.fn();
     } finally {
+      endTrack(this);
       activeSub = prevSub;
     }
   }
@@ -27,6 +28,39 @@ var ReactiveEffect = class {
     this.run();
   }
 };
+function endTrack(sub) {
+  const depsTail = sub.depsTail;
+  if (depsTail) {
+    if (depsTail.nextDep) {
+      console.log("\u5982\u679C\u5C3E\u8282\u70B9\u8FD8\u6709\u4E0B\u4E00\u4E2A\u8282\u70B9\uFF0C\u8BF4\u660E\u7B2C\u4E8C\u6B21effect\u6267\u884C\u65F6 \u6709\u7684ref\u5C1D\u8BD5\u590D\u7528\u6536\u96C6\u8FC7\u7684\u8282\u70B9\u3002\u590D\u7528\u5931\u8D25\u4E86 \u6B64\u65F6\u8FD9\u4E2A\u5931\u8D25\u7684\u5C31\u662F\u6CA1\u88AB\u4E8C\u6B21\u4F9D\u8D56\u6536\u96C6\u7684\u8282\u70B9\u6240\u4EE5\u8981\u6E05\u7406");
+      clearTracking(depsTail.nextDep);
+      depsTail.nextDep = void 0;
+    }
+  } else if (sub.deps) {
+    clearTracking(sub.deps);
+    sub.deps = void 0;
+  }
+}
+function clearTracking(link2) {
+  while (link2) {
+    const { sub, prevSub, nextSub, nextDep, dep } = link2;
+    if (prevSub) {
+      prevSub.nextSub = nextSub;
+      link2.nextDep = void 0;
+    } else {
+      dep.subs = nextSub;
+    }
+    if (nextSub) {
+      nextSub.prevSub = prevSub;
+      link2.prevSub = void 0;
+    } else {
+      dep.subsTail = prevSub;
+    }
+    link2.dep = link2.sub = void 0;
+    link2.nextDep = void 0;
+    link2 = nextDep;
+  }
+}
 function effect(fn, options) {
   const e = new ReactiveEffect(fn);
   Object.assign(e, options);
@@ -41,16 +75,15 @@ function link(dep, sub) {
   const currentDep = sub.depsTail;
   const nextDep = currentDep === void 0 ? sub.deps : currentDep.nextDep;
   if (nextDep && nextDep.dep === dep) {
-    console.log("\u76F8\u540C\u7684\u4F9D\u8D56\u76F4\u63A5\u590D\u7528");
     sub.depsTail = nextDep;
     return;
   }
   const newLink = {
     sub,
     dep,
-    nextDep: void 0,
+    nextDep,
     nextSub: void 0,
-    prevSub: void 0,
+    prevSub: void 0
   };
   if (dep.subsTail) {
     dep.subsTail.nextSub = newLink;
@@ -115,5 +148,10 @@ function ref(value) {
 function isRef(value) {
   return !!(value && value["__v_isRef" /* IS_REF */]);
 }
-export { activeSub, effect, isRef, ref };
+export {
+  activeSub,
+  effect,
+  isRef,
+  ref
+};
 //# sourceMappingURL=reactivity.esm.js.map
