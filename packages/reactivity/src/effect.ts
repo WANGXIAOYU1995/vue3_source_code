@@ -15,7 +15,7 @@ class ReactiveEffect {
         // 先将之前的effect保存起来  没有嵌套时候就是undefined,因为js是单线程的 所以只有一个activeSub  上下两个effect也不影响
         const prevSub = activeSub
         activeSub = this
-        this.depsTail = undefined
+        startTrack(this)
         try {
             return this.fn()
         } finally {
@@ -37,7 +37,11 @@ class ReactiveEffect {
         this.run()
     }
 }
-
+// 开始追踪依赖
+function startTrack(sub) {
+    sub.depsTail = undefined
+}
+// 结束追踪 清理依赖
 function endTrack(sub) {
     const depsTail = sub.depsTail
     if (depsTail) {
@@ -48,11 +52,12 @@ function endTrack(sub) {
         }
     } else if (sub.deps) {
         // 因为首次effect执行把尾结点弄为undefined了，如果二次执行时还是undefined说明依赖没收集到（所有的ref都没进if）
-        // 所以没进if要把deps全部删掉
+        // 所以没进if要把deps全部删掉 头节点是第一次收集的
         clearTracking(sub.deps)
         sub.deps = undefined
     }
 }
+//依赖清理：要删除dep收集依赖时的各个link节点 最后就是删除了dep的依赖 
 function clearTracking(link: Link) {
     while (link) {
         const { sub, prevSub, nextSub, nextDep, dep } = link
@@ -61,10 +66,9 @@ function clearTracking(link: Link) {
             prevSub.nextSub = nextSub
             link.nextDep = undefined
         } else {
-            // 没有上一个说明是头节点，把头结点指向要清理的下一个
+            // 没有上一个说明是头节点，把头结点指向要清理的下一个,这个依赖清理了 所以要断开dep ref中的subs关联当前节点
             dep.subs = nextSub
         }
-
         if (nextSub) {
             // 如果有下一个节点，把下一个节点的上一个指向要清理的上一个
             nextSub.prevSub = prevSub

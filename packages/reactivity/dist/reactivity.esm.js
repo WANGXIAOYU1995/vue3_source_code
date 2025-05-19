@@ -11,7 +11,7 @@ var ReactiveEffect = class {
   run() {
     const prevSub = activeSub;
     activeSub = this;
-    this.depsTail = void 0;
+    startTrack(this);
     try {
       return this.fn();
     } finally {
@@ -28,6 +28,9 @@ var ReactiveEffect = class {
     this.run();
   }
 };
+function startTrack(sub) {
+  sub.depsTail = void 0;
+}
 function endTrack(sub) {
   const depsTail = sub.depsTail;
   if (depsTail) {
