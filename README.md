@@ -38,3 +38,5 @@ monorepo 中 安装其他的包 pnpm install @vue/shared --workspace --filter @v
 什么时候需要清理呢？1.进了if，二次触发effect时未进行依赖收集，此时 复用节点时 会复用失败，因为二次effect执行 依赖收集 if没进的这里 会导致 直接创建新分支节点，新分支节点复用的时候发现复用不了第一次依赖收集存的deps 复用失败了 就把失败的这节点存起来作为当前复用完的下一个节点（由于尾结点一直指向newLink）.
 所以当尾结点有且 尾节点有nextDep时就代表复用失败了，那这个复用失败的节点需要被清理 depsTail.nextDep 2.第二种情况 if是大条件，effect首次执行 if为true 第二次执行时 尾结点是undefined同时头结点有（第一次收集下的）此时也要清理全部dep.subs因为第二次执行没收集到依赖
 清理依赖的函数:
+
+# 5.

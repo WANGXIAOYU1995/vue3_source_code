@@ -54,15 +54,20 @@ function propagete(subs) {
   let link2 = subs;
   const queueEffect = [];
   while (link2) {
-    queueEffect.push(link2.sub);
+    const sub = link2.sub;
+    if (!sub.tracking) {
+      queueEffect.push(link2.sub);
+    }
     link2 = link2.nextSub;
   }
   queueEffect.forEach((effect2) => effect2.notify());
 }
 function startTrack(sub) {
+  sub.tracking = true;
   sub.depsTail = void 0;
 }
 function endTrack(sub) {
+  sub.tracking = false;
   const depsTail = sub.depsTail;
   if (depsTail) {
     if (depsTail.nextDep) {
@@ -107,6 +112,8 @@ var ReactiveEffect = class {
   deps;
   // 依赖项列表的尾节点
   depsTail;
+  // 解决递归 是否开始追踪
+  tracking = false;
   run() {
     const prevSub = activeSub;
     activeSub = this;

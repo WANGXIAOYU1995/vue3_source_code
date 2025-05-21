@@ -10,7 +10,8 @@ class ReactiveEffect {
     deps: Link | undefined
     // 依赖项列表的尾节点
     depsTail: Link | undefined
-
+    // 解决递归 是否开始追踪
+    tracking = false
     run() {
         // 先将之前的effect保存起来  没有嵌套时候就是undefined,因为js是单线程的 所以只有一个activeSub  上下两个effect也不影响
         const prevSub = activeSub

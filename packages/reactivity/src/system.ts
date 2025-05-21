@@ -88,7 +88,12 @@ function propagete(subs) {
     let link = subs
     const queueEffect = []
     while (link) {
-        queueEffect.push(link.sub)
+        const sub = link.sub
+        // 如果不处理 碰到count.value++放在effect里会递归，因为一直在收集依赖  tracking标记一直是true
+        // 所以这里判断 false才加入队列
+        if (!sub.tracking) {
+            queueEffect.push(link.sub)
+        }
         link = link.nextSub
     }
     queueEffect.forEach(effect => effect.notify())
@@ -98,10 +103,12 @@ function propagete(subs) {
 
 // 开始追踪依赖
 export function startTrack(sub) {
+    sub.tracking = true
     sub.depsTail = undefined
 }
 // 结束追踪 清理依赖
 export function endTrack(sub) {
+    sub.tracking = false
     const depsTail = sub.depsTail
     if (depsTail) {
         if (depsTail.nextDep) {
