@@ -143,66 +143,36 @@ function effect(fn, options) {
   return runner;
 }
 
-// packages/reactivity/src/ref.ts
-var RefImpl = class {
-  _value;
-  ["__v_isRef" /* IS_REF */] = true;
-  // 标识
-  subs;
-  //subscribers(订阅者) 此处存储当前依赖的副作用函数effect
-  // 尾节点
-  subsTail;
-  constructor(value) {
-    this._value = value;
-  }
-  get value() {
-    trackRef(this);
-    return this._value;
-  }
-  set value(newValue) {
-    this._value = newValue;
-    triggerRef(this);
-  }
-};
-function ref(value) {
-  return new RefImpl(value);
-}
-function isRef(value) {
-  return !!(value && value["__v_isRef" /* IS_REF */]);
-}
-
 // packages/shared/src/index.ts
 function isObject(value) {
   return value !== null && typeof value === "object";
 }
+function hasChanged(newValue, oldValue) {
+  return !Object.is(newValue, oldValue);
+}
 
-// packages/reactivity/src/reactive.ts
-function reactive(target) {
-  return createReactiveObject(target);
-}
-function createReactiveObject(target) {
-  if (!isObject) {
-    return target;
-  }
-  const proxy = new Proxy(
-    target,
-    {
-      get(target2, key, receiver) {
-        track(target2, key);
-        return Reflect.get(target2, key, receiver);
-      },
-      set(target2, key, value) {
-        const res = Reflect.set(target2, key, value);
-        trigger(target2, key);
-        return res;
-      }
+// packages/reactivity/src/baseHandlers.ts
+var mutablaHandlers = {
+  get(target, key, receiver) {
+    track(target, key);
+    const res = Reflect.get(target, key, receiver);
+    if (isRef(res)) {
+      return res.value;
     }
-  );
-  return proxy;
-}
-var Dep = class {
-  subs;
-  subsTail;
+    return res;
+  },
+  set(target, key, newValue, receiver) {
+    const oldValue = target[key];
+    const res = Reflect.set(target, key, newValue, receiver);
+    if (isRef(oldValue) && !isRef(newValue)) {
+      oldValue.value = newValue;
+      return res;
+    }
+    if (hasChanged(oldValue, newValue)) {
+      trigger(target, key);
+      return res;
+    }
+  }
 };
 var targetMap = /* @__PURE__ */ new WeakMap();
 function track(target, key) {
@@ -229,9 +199,71 @@ function trigger(target, key) {
   }
   propagete(dep.subs);
 }
+var Dep = class {
+  subs;
+  subsTail;
+};
+
+// packages/reactivity/src/reactive.ts
+var reactiveMap = /* @__PURE__ */ new WeakMap();
+var reactiveSet = /* @__PURE__ */ new WeakSet();
+function reactive(target) {
+  return createReactiveObject(target);
+}
+function createReactiveObject(target) {
+  if (!isObject) {
+    return target;
+  }
+  const existingProxy = reactiveMap.get(target);
+  if (existingProxy) {
+    return existingProxy;
+  }
+  if (reactiveSet.has(target)) {
+    return target;
+  }
+  const proxy = new Proxy(target, mutablaHandlers);
+  reactiveMap.set(target, proxy);
+  reactiveSet.add(proxy);
+  return proxy;
+}
+function isReactive(target) {
+  return reactiveSet.has(target);
+}
+
+// packages/reactivity/src/ref.ts
+var RefImpl = class {
+  _value;
+  ["__v_isRef" /* IS_REF */] = true;
+  // 标识
+  subs;
+  //subscribers(订阅者) 此处存储当前依赖的副作用函数effect
+  // 尾节点
+  subsTail;
+  constructor(value) {
+    this._value = value;
+    this._value = isObject(value) ? reactive(value) : value;
+  }
+  get value() {
+    trackRef(this);
+    return this._value;
+  }
+  set value(newValue) {
+    if (hasChanged(this._value, newValue)) {
+      this._value = isObject(newValue) ? reactive(newValue) : newValue;
+      triggerRef(this);
+    }
+  }
+};
+function ref(value) {
+  return new RefImpl(value);
+}
+function isRef(value) {
+  return !!(value && value["__v_isRef" /* IS_REF */]);
+}
 export {
   activeSub,
   effect,
+  isReactive,
   isRef,
   reactive,
   ref

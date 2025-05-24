@@ -1,4 +1,6 @@
+import { hasChanged, isObject } from "@vue/shared";
 import { Link, trackRef, triggerRef } from "./system";
+import { reactive } from "./reactive";
 
 enum ReactiveFlags {
     IS_REF = '__v_isRef'
@@ -14,6 +16,8 @@ class RefImpl {
     subsTail: Link
     constructor(value) {
         this._value = value
+        // 如果value是一个对象走reactive的代理  否则走value
+        this._value = isObject(value) ? reactive(value) : value
     }
     get value() {
         // 收集依赖
@@ -21,8 +25,10 @@ class RefImpl {
         return this._value
     }
     set value(newValue) {
-        this._value = newValue
-        triggerRef(this)
+        if (hasChanged(this._value, newValue)) {
+            this._value = isObject(newValue) ? reactive(newValue) : newValue
+            triggerRef(this)
+        }
     }
 }
 

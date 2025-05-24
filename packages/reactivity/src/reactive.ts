@@ -1,7 +1,11 @@
-import { isObject } from "@vue/shared"
+import { hasChanged, isObject } from "@vue/shared"
 import { Link, link, propagete } from "./system"
 import { activeSub } from "./effect"
-
+import { isRef } from "./ref"
+import { mutablaHandlers } from './baseHandlers'
+// proxy reactive对象
+const reactiveMap = new WeakMap()
+const reactiveSet = new WeakSet()
 export function reactive(target) {
     return createReactiveObject(target)
 }
@@ -10,51 +14,23 @@ function createReactiveObject(target) {
     if (!isObject) {
         return target
     }
-    const proxy = new Proxy(target, {
-        get(target, key, receiver) {
-            track(target, key)
-            return Reflect.get(target, key, receiver)
-        },
-        set(target, key, value) {
-            // const res = target[key] = value
-            const res = Reflect.set(target, key, value)
-            trigger(target, key)
-            return res
-        }
+    // 看下reactive有没有被代理过，避免被重复代理  
+    const existingProxy = reactiveMap.get(target)
+    if (existingProxy) {
+        return existingProxy
     }
-    )
+    // 看一下target是不是响应式对象
+    if (reactiveSet.has(target)) {
+        return target
+    }
+    const proxy = new Proxy(target, mutablaHandlers)
+    reactiveMap.set(target, proxy)
+    reactiveSet.add(proxy)
     return proxy
 }
-class Dep {
-    subs: Link
-    subsTail: Link
 
-}
-// 定义一个函数track
-const targetMap = new WeakMap()
-function track(target, key) {
-    if (!activeSub) return
-    let depsMap = targetMap.get(target)
-    if (!depsMap) {
-        targetMap.set(target, depsMap = new Map())
-    }
-    let dep = depsMap.get(key)
-    if (!dep) {
-        depsMap.set(key, dep = new Dep())
-    }
-    // 收集依赖
-    link(dep, activeSub)
-    console.log('dep :>> ', dep);
-}
-function trigger(target, key) {
-    const depsMap = targetMap.get(target)
-    if (!depsMap) {
-        return
-    }
-    const dep = depsMap.get(key)
-    if (!dep) {
-        return
-    }
-    // 触发依赖
-    propagete(dep.subs)
+
+/** 判断是不是响应式 在reactiveSet中就是响应式 */
+export function isReactive(target) {
+    return reactiveSet.has(target)
 }

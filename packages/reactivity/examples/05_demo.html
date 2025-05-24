@@ -17,9 +17,10 @@
     <script type="module">
         import { effect, ref, reactive } from '../dist/reactivity.esm.js'
         // import { ref, effect, reactive } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
-        const state = reactive({
-            a: 1
-        })
+        const obj = {
+            a: 0
+        }
+        const state = reactive(obj)
         effect(() => {
             console.log('state.a :>> ', state.a);
         })
