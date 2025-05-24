@@ -1,4 +1,3 @@
-import { ReactiveEffect } from "vue"
 import { activeSub } from "./effect"
 // 依赖项  有可能是ref 也可能是reactive     
 // flag count 作为ref在一个effect会进行两次依赖收集，创建两个link节点，同时通过往 flag count的dep（ref的this）增加subsTail和subs属性，将activeEffect进行关联（防止嵌套effect）
@@ -6,7 +5,7 @@ import { activeSub } from "./effect"
 // 这个effect呢里面存放了deps depsTail  其实是activeEffect（只有一个effect）与当前的link1 link2，如果只有一个link节点，那么run 的时候就可以判断 effect中存放的deps（头节点 ）中的dep是否与当前的link1 link2的dep相同，如果相同则复用。
 // 如果有两个link节点，比如 flag和count 依赖收集的link节点，那么就取effect的depsTail 尾节点的nextDep作为复用节点
 //
-interface Dep {
+interface Dependency {
     // 订阅者列表 头结点和尾节点
     subs: Link | undefined
     subsTail: Link | undefined
@@ -19,7 +18,7 @@ export interface Link {
     sub: Sub
     nextSub: Link | undefined
     prevSub: Link | undefined
-    dep: Dep
+    dep: Dependency
     nextDep: Link | undefined
 }
 let linkPool: Link
@@ -84,7 +83,7 @@ export function triggerRef(dep) {
         propagete(dep.subs)
     }
 }
-function propagete(subs) {
+export function propagete(subs) {
     let link = subs
     const queueEffect = []
     while (link) {

@@ -170,10 +170,70 @@ function ref(value) {
 function isRef(value) {
   return !!(value && value["__v_isRef" /* IS_REF */]);
 }
+
+// packages/shared/src/index.ts
+function isObject(value) {
+  return value !== null && typeof value === "object";
+}
+
+// packages/reactivity/src/reactive.ts
+function reactive(target) {
+  return createReactiveObject(target);
+}
+function createReactiveObject(target) {
+  if (!isObject) {
+    return target;
+  }
+  const proxy = new Proxy(
+    target,
+    {
+      get(target2, key, receiver) {
+        track(target2, key);
+        return Reflect.get(target2, key, receiver);
+      },
+      set(target2, key, value) {
+        const res = Reflect.set(target2, key, value);
+        trigger(target2, key);
+        return res;
+      }
+    }
+  );
+  return proxy;
+}
+var Dep = class {
+  subs;
+  subsTail;
+};
+var targetMap = /* @__PURE__ */ new WeakMap();
+function track(target, key) {
+  if (!activeSub) return;
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    targetMap.set(target, depsMap = /* @__PURE__ */ new Map());
+  }
+  let dep = depsMap.get(key);
+  if (!dep) {
+    depsMap.set(key, dep = new Dep());
+  }
+  link(dep, activeSub);
+  console.log("dep :>> ", dep);
+}
+function trigger(target, key) {
+  const depsMap = targetMap.get(target);
+  if (!depsMap) {
+    return;
+  }
+  const dep = depsMap.get(key);
+  if (!dep) {
+    return;
+  }
+  propagete(dep.subs);
+}
 export {
   activeSub,
   effect,
   isRef,
+  reactive,
   ref
 };
 //# sourceMappingURL=reactivity.esm.js.map
